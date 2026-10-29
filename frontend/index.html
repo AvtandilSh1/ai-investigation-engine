@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Investigation Engine</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Investigation Engine</h1>
+      <p class="sub">Multi-source document investigation with citations</p>
+    </div>
+    <div id="status" class="pill">checking…</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Documents</h2>
+      <form id="uploadForm" class="row">
+        <input type="file" id="fileInput" required />
+        <select id="strategy">
+          <option value="recursive">recursive chunking</option>
+          <option value="fixed">fixed-size chunking</option>
+        </select>
+        <button type="submit">Upload</button>
+      </form>
+      <p id="uploadMsg" class="msg"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Format</th>
+              <th>Chunks</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="docBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Investigate</h2>
+      <textarea id="question" rows="4" placeholder="Ask a question that may need multiple documents…"></textarea>
+      <div class="row">
+        <label>top_k <input type="number" id="topK" value="8" min="1" max="20" /></label>
+        <button id="askBtn" type="button">Run investigation</button>
+      </div>
+      <p id="askMsg" class="msg"></p>
+
+      <div id="result" class="hidden">
+        <div class="meta-line">
+          <span id="abstain"></span>
+          <span id="confidence"></span>
+          <span id="retrieved"></span>
+        </div>
+        <h3>Answer</h3>
+        <div id="answer" class="answer"></div>
+
+        <h3>Citations</h3>
+        <ul id="citations"></ul>
+
+        <h3>Contradictions</h3>
+        <ul id="contras"></ul>
+
+        <h3>Steps</h3>
+        <ol id="steps"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+[
+  {
+    "id": "q01",
+    "type": "multi_doc",
+    "question": "Which change caused the March payments processing delay, which services were affected, and which documents support that?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Change Record CHG-4419", "Payments SLO Handbook"],
+    "gold_answer": "CHG-4419 lowered Redis timeout in payments-processor and caused delays affecting payments-processor, checkout-api, and invoice-worker.",
+    "gold_citations": ["incident_march_payments.md", "change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q02",
+    "type": "simple",
+    "question": "What is the change ID that updated the Redis client timeout for payments-processor?",
+    "relevant_doc_titles": ["Change Record CHG-4419", "Incident Report — March Payments Delay"],
+    "gold_answer": "CHG-4419",
+    "gold_citations": ["change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q03",
+    "type": "simple",
+    "question": "When was CHG-4419 deployed to production?",
+    "relevant_doc_titles": ["Change Record CHG-4419"],
+    "gold_answer": "2024-03-11 22:10 UTC",
+    "gold_citations": ["change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q04",
+    "type": "multi_doc",
+    "question": "Did CHG-4402 modify payment systems, and what services did it touch?",
+    "relevant_doc_titles": ["Change Record CHG-4402"],
+    "gold_answer": "No. CHG-4402 only touched web-frontend and did not modify payment systems.",
+    "gold_citations": ["change_chg4402.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q05",
+    "type": "contradiction",
+    "question": "What caused the March payment delays according to available documents?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Draft Postmortem (conflicting claim)", "Change Record CHG-4419"],
+    "gold_answer": "Incident and change records blame CHG-4419 Redis timeout change, while a draft postmortem claims billing-db failover. Sources conflict.",
+    "gold_citations": ["incident_march_payments.md", "postmortem_conflicting.json"],
+    "should_abstain": false,
+    "expect_contradiction": true
+  },
+  {
+    "id": "q06",
+    "type": "unanswerable",
+    "question": "Which Kubernetes node pool ran out of IP addresses during the March payments incident?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q07",
+    "type": "simple",
+    "question": "What is the authorization latency SLO for payments?",
+    "relevant_doc_titles": ["Payments SLO Handbook"],
+    "gold_answer": "99.9% under 2 seconds",
+    "gold_citations": ["slo_handbook.html"],
+    "should_abstain": false
+  },
+  {
+    "id": "q08",
+    "type": "multi_hop",
+    "question": "Who worked on Charles Babbage's Analytical Engine and what was that person known for regarding algorithms?",
+    "relevant_doc_titles": ["Ada Lovelace", "Analytical Engine", "Charles Babbage"],
+    "gold_answer": "Ada Lovelace; she wrote what is considered the first computer algorithm for the Analytical Engine.",
+    "gold_citations": ["wiki_ada_lovelace.txt", "wiki_analytical_engine.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q09",
+    "type": "simple",
+    "question": "Who designed the Analytical Engine?",
+    "relevant_doc_titles": ["Analytical Engine", "Charles Babbage"],
+    "gold_answer": "Charles Babbage",
+    "gold_citations": ["wiki_analytical_engine.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q10",
+    "type": "unanswerable",
+    "question": "What was Ada Lovelace's favorite programming language?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q11",
+    "type": "simple",
+    "question": "Which pager alert fired during the March payments delay?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "PAG-2291",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q12",
+    "type": "simple",
+    "question": "What Grafana dashboard is cited for the payments incident evidence?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "pay-slo-03",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q13",
+    "type": "multi_doc",
+    "question": "Compare CHG-4419 and CHG-4402: which one is linked to payment latency?",
+    "relevant_doc_titles": ["Change Record CHG-4419", "Change Record CHG-4402", "Incident Report — March Payments Delay"],
+    "gold_answer": "CHG-4419 is linked to payment latency; CHG-4402 is a CDN TTL change with no incidents linked.",
+    "gold_citations": ["change_chg4419.txt", "change_chg4402.txt", "incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q14",
+    "type": "simple",
+    "question": "What was the Redis timeout changed from and to in CHG-4419?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "from 200ms to 20ms",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q15",
+    "type": "simple",
+    "question": "How long were payment authorization delays during the March incident window?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "8-14 minutes",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q16",
+    "type": "unanswerable",
+    "question": "What was the exact revenue loss in USD from the March payments delay?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q17",
+    "type": "simple",
+    "question": "Who owns change CHG-4419?",
+    "relevant_doc_titles": ["Change Record CHG-4419"],
+    "gold_answer": "platform-payments",
+    "gold_citations": ["change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q18",
+    "type": "simple",
+    "question": "Which team owns CHG-4402?",
+    "relevant_doc_titles": ["Change Record CHG-4402"],
+    "gold_answer": "edge-team",
+    "gold_citations": ["change_chg4402.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q19",
+    "type": "multi_hop",
+    "question": "What machine did Ada Lovelace write an algorithm for, and who invented that machine?",
+    "relevant_doc_titles": ["Ada Lovelace", "Analytical Engine", "Charles Babbage"],
+    "gold_answer": "Analytical Engine, invented by Charles Babbage",
+    "gold_citations": ["wiki_ada_lovelace.txt", "wiki_analytical_engine.txt", "wiki_babbage.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q20",
+    "type": "simple",
+    "question": "In what year was the Analytical Engine first described?",
+    "relevant_doc_titles": ["Analytical Engine"],
+    "gold_answer": "1837",
+    "gold_citations": ["wiki_analytical_engine.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q21",
+    "type": "contradiction",
+    "question": "Is there disagreement about whether an application configuration change caused the March outage?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Draft Postmortem (conflicting claim)"],
+    "gold_answer": "Yes. Incident analysis cites CHG-4419 config change; draft postmortem blames billing-db failover instead.",
+    "gold_citations": ["incident_march_payments.md", "postmortem_conflicting.json"],
+    "should_abstain": false,
+    "expect_contradiction": true
+  },
+  {
+    "id": "q22",
+    "type": "simple",
+    "question": "Which dependent services are listed in the Payments SLO handbook?",
+    "relevant_doc_titles": ["Payments SLO Handbook"],
+    "gold_answer": "checkout-api and invoice-worker",
+    "gold_citations": ["slo_handbook.html"],
+    "should_abstain": false
+  },
+  {
+    "id": "q23",
+    "type": "unanswerable",
+    "question": "Who was the CEO that approved CHG-4419?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q24",
+    "type": "simple",
+    "question": "What rollback plan is documented for CHG-4419?",
+    "relevant_doc_titles": ["Change Record CHG-4419"],
+    "gold_answer": "revert timeout to 200ms",
+    "gold_citations": ["change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q25",
+    "type": "multi_doc",
+    "question": "Which services were damaged or affected by the March payments delay according to the incident report?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Payments SLO Handbook"],
+    "gold_answer": "payments-processor, checkout-api, invoice-worker",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q26",
+    "type": "simple",
+    "question": "What time window did the March customer impact cover?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "09:40 and 11:15 UTC on 2024-03-12 context",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q27",
+    "type": "simple",
+    "question": "Charles Babbage originated the concept of what kind of computer?",
+    "relevant_doc_titles": ["Charles Babbage"],
+    "gold_answer": "digital programmable computer",
+    "gold_citations": ["wiki_babbage.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q28",
+    "type": "unanswerable",
+    "question": "What is the IP address of payments-processor in production?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q29",
+    "type": "simple",
+    "question": "What escalation path does the Payments SLO handbook mention?",
+    "relevant_doc_titles": ["Payments SLO Handbook"],
+    "gold_answer": "payments on-call rotation",
+    "gold_citations": ["slo_handbook.html"],
+    "should_abstain": false
+  },
+  {
+    "id": "q30",
+    "type": "multi_hop",
+    "question": "Relate Babbage's inventions to Lovelace's contribution in one answer.",
+    "relevant_doc_titles": ["Charles Babbage", "Ada Lovelace", "Analytical Engine"],
+    "gold_answer": "Babbage designed the Analytical Engine; Lovelace wrote an early algorithm for it.",
+    "gold_citations": ["wiki_babbage.txt", "wiki_ada_lovelace.txt", "wiki_analytical_engine.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q31",
+    "type": "simple",
+    "question": "What status is recorded for CHG-4402?",
+    "relevant_doc_titles": ["Change Record CHG-4402"],
+    "gold_answer": "successful, no incidents linked",
+    "gold_citations": ["change_chg4402.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q32",
+    "type": "unanswerable",
+    "question": "Which Jira ticket closed the billing-db failover root cause permanently?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q33",
+    "type": "simple",
+    "question": "On what date did the payments-processor elevated latency begin according to the incident report?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay"],
+    "gold_answer": "2024-03-12",
+    "gold_citations": ["incident_march_payments.md"],
+    "should_abstain": false
+  },
+  {
+    "id": "q34",
+    "type": "contradiction",
+    "question": "Do all documents agree that billing-db failover caused the March payments issue?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Draft Postmortem (conflicting claim)", "Change Record CHG-4419"],
+    "gold_answer": "No. Only the draft postmortem claims billing-db failover; other docs point to CHG-4419.",
+    "gold_citations": ["postmortem_conflicting.json", "incident_march_payments.md"],
+    "should_abstain": false,
+    "expect_contradiction": true
+  },
+  {
+    "id": "q35",
+    "type": "simple",
+    "question": "What summary text is listed for CHG-4402?",
+    "relevant_doc_titles": ["Change Record CHG-4402"],
+    "gold_answer": "CDN cache TTL increase for marketing assets",
+    "gold_citations": ["change_chg4402.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q36",
+    "type": "multi_doc",
+    "question": "Using incident and change records, what configuration parameter change preceded the outage?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Change Record CHG-4419"],
+    "gold_answer": "Redis client/socket timeout reduction for payments-processor",
+    "gold_citations": ["incident_march_payments.md", "change_chg4419.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q37",
+    "type": "unanswerable",
+    "question": "How many engineers were on the bridge call for PAG-2291?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q38",
+    "type": "simple",
+    "question": "Ada Lovelace was Countess of what?",
+    "relevant_doc_titles": ["Ada Lovelace"],
+    "gold_answer": "Lovelace",
+    "gold_citations": ["wiki_ada_lovelace.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q39",
+    "type": "simple",
+    "question": "What other engine did Babbage invent besides designing the Analytical Engine?",
+    "relevant_doc_titles": ["Charles Babbage"],
+    "gold_answer": "Difference Engine",
+    "gold_citations": ["wiki_babbage.txt"],
+    "should_abstain": false
+  },
+  {
+    "id": "q40",
+    "type": "multi_doc",
+    "question": "Which documents confirm that checkout-api was impacted by the March event?",
+    "relevant_doc_titles": ["Incident Report — March Payments Delay", "Payments SLO Handbook"],
+    "gold_answer": "The incident report lists checkout-api as affected; the SLO handbook lists it as a dependent service.",
+    "gold_citations": ["incident_march_payments.md", "slo_handbook.html"],
+    "should_abstain": false
+  },
+  {
+    "id": "q41",
+    "type": "unanswerable",
+    "question": "What was the weather in London when CHG-4419 was deployed?",
+    "relevant_doc_titles": [],
+    "gold_answer": "",
+    "gold_citations": [],
+    "should_abstain": true
+  },
+  {
+    "id": "q42",
+    "type": "simple",
+    "question": "What does the draft postmortem claim caused the March payment delays?",
+    "relevant_doc_titles": ["Draft Postmortem (conflicting claim)"],
+    "gold_answer": "database failover in billing-db",
+    "gold_citations": ["postmortem_conflicting.json"],
+    "should_abstain": false
+  }
+]
