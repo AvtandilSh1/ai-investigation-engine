@@ -37,7 +37,7 @@ TOOLS = [
 
 SYSTEM_PROMPT = """You are an investigation engine over an organization's documents.
 Rules:
-- Only use evidence returned by tools or provided in context. Never invent facts.
+- Only use the provided evidence. Never invent facts.
 - If evidence is missing or too weak, set abstained=true and say what is missing.
 - If sources conflict, mention the conflict explicitly.
 - Prefer answers that connect multiple documents when the question requires it.
@@ -72,11 +72,9 @@ class InvestigationEngine:
         steps = ["decompose_and_retrieve"]
         gathered: dict[str, dict] = {}
 
-        # always do an initial hybrid search
         for hit in self.searcher.search(question, top_k=top_k):
             gathered[hit["chunk_id"]] = hit
 
-        # multi-step: split on conjunction-like cues and search subqueries
         for sub in _subqueries(question):
             steps.append(f"subquery:{sub[:80]}")
             for hit in self.searcher.search(sub, top_k=max(3, top_k // 2)):
@@ -87,85 +85,61 @@ class InvestigationEngine:
         if not self.llm.enabled:
             return self._offline_answer(question, list(gathered.values()), contradictions, steps)
 
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": (
-                    f"Question: {question}\n\n"
-                    f"Initial evidence:\n{_format_evidence(list(gathered.values())[:12])}\n\n"
-                    "You may call tools if you need more evidence, then produce the final JSON."
-                ),
-            },
-        ]
+        evidence = _format_evidence(list(gathered.values())[:12])
+        payload: dict = {}
 
+        # Fast path: one JSON completion (most reliable on free LLM hosts)
         try:
-            for round_i in range(3):
-                result = self.llm.chat(messages, tools=TOOLS, temperature=0.1)
-                if result["tool_calls"]:
-                    messages.append(
-                        {
-                            "role": "assistant",
-                            "content": result["content"] or None,
-                            "tool_calls": [
-                                {
-                                    "id": tc["id"],
-                                    "type": "function",
-                                    "function": {
-                                        "name": tc["name"],
-                                        "arguments": json.dumps(tc["arguments"]),
-                                    },
-                                }
-                                for tc in result["tool_calls"]
-                            ],
-                        }
-                    )
-                    # openai python needs content as string sometimes - fix None
-                    if messages[-1]["content"] is None:
-                        messages[-1]["content"] = ""
-
-                    for tc in result["tool_calls"]:
-                        tool_out = self._run_tool(tc["name"], tc["arguments"], gathered, top_k)
-                        steps.append(f"tool:{tc['name']}")
-                        messages.append(
-                            {
-                                "role": "tool",
-                                "tool_call_id": tc["id"],
-                                "content": tool_out,
-                            }
-                        )
-                    continue
-
-                payload = _safe_json(result["content"])
-                break
-            else:
-                payload = {}
-        except RuntimeError as e:
+            steps.append("llm_synthesize")
+            payload = self.llm.complete_json(
+                SYSTEM_PROMPT,
+                f"Question: {question}\n\nEvidence:\n{evidence}\n\nReturn the JSON answer now.",
+            )
+        except Exception as e:
             steps.append(f"llm_error:{e}")
-            return self._offline_answer(question, list(gathered.values()), contradictions, steps)
+            # Optional tool round — only if synthesis failed hard and we still want richer retrieval
+            try:
+                steps.append("tool_search_retry")
+                tool_hits = self._one_tool_search(question, top_k)
+                for h in tool_hits:
+                    gathered[h["chunk_id"]] = h
+                evidence = _format_evidence(list(gathered.values())[:12])
+                payload = self.llm.complete_json(
+                    SYSTEM_PROMPT,
+                    f"Question: {question}\n\nEvidence:\n{evidence}\n\nReturn the JSON answer now.",
+                )
+            except Exception as e2:
+                steps.append(f"llm_retry_error:{e2}")
+                return self._offline_answer(question, list(gathered.values()), contradictions, steps)
+
+        if not payload or payload.get("parse_error"):
+            # still try to use whatever text came back
+            if not payload.get("answer"):
+                return self._offline_answer(question, list(gathered.values()), contradictions, steps)
 
         return self._build_response(question, payload, gathered, contradictions, steps)
 
-    def _run_tool(self, name: str, args: dict, gathered: dict, top_k: int) -> str:
-        if name == "search_evidence":
-            q = str(args.get("query") or "")
-            k = int(args.get("top_k") or max(4, top_k // 2))
-            hits = self.searcher.search(q, top_k=k)
-            for h in hits:
-                gathered[h["chunk_id"]] = h
-            return _format_evidence(hits)
-        if name == "list_document_titles":
-            titles = sorted(
+    def _one_tool_search(self, question: str, top_k: int) -> list[dict]:
+        # Keep tool-calling support without multi-turn chat fragility
+        result = self.llm.chat(
+            [
                 {
-                    (h.get("document_name") or h.get("metadata", {}).get("filename") or "")
-                    for h in gathered.values()
-                }
-            )
-            # also peek corpus via searcher cache
-            corpus = self.searcher._corpus()
-            all_titles = sorted({c["document_name"] for c in corpus})[:80]
-            return json.dumps({"known_from_hits": titles, "sample_index": all_titles})
-        return json.dumps({"error": f"unknown tool {name}"})
+                    "role": "system",
+                    "content": "Call search_evidence if you need a tighter subquery, otherwise call nothing.",
+                },
+                {"role": "user", "content": question},
+            ],
+            tools=TOOLS,
+            temperature=0.0,
+            max_tokens=300,
+        )
+        hits = []
+        for tc in result.get("tool_calls") or []:
+            if tc["name"] != "search_evidence":
+                continue
+            q = str(tc["arguments"].get("query") or question)
+            hits.extend(self.searcher.search(q, top_k=max(3, top_k // 2)))
+        return hits
 
     def _build_response(
         self,
@@ -210,7 +184,6 @@ class InvestigationEngine:
             answer = "Insufficient grounded evidence to answer."
             conf = min(conf, 0.2)
 
-        # if almost no retrieval, force abstain
         if len(gathered) == 0:
             abstained = True
             answer = "No relevant documents were retrieved for this question."
@@ -234,7 +207,7 @@ class InvestigationEngine:
         contradictions: list[dict],
         steps: list[str],
     ) -> InvestigateResponse:
-        steps = steps + ["offline_extractive_fallback"]
+        steps = steps + ["extractive_fallback"]
         if not hits:
             return InvestigateResponse(
                 answer="No relevant documents were retrieved for this question.",
@@ -264,7 +237,6 @@ class InvestigationEngine:
                 if x not in stop and len(x) > 2
             }
             overlap = max(overlap, len(q_toks & t))
-        # raw_score survives rerank; fall back to score
         best_raw = max(float(h.get("raw_score") or h.get("sparse") or h.get("dense") or 0.0) for h in hits)
         weak = overlap <= 1 or (best_raw < 0.05 and overlap <= 2)
 
@@ -290,15 +262,12 @@ class InvestigationEngine:
                     ContradictionNote(topic=c["topic"], sources=c["sources"], detail=c["detail"])
                     for c in contradictions
                 ],
-                steps=steps + ["offline_abstain_weak_evidence"],
+                steps=steps + ["abstain_weak_evidence"],
                 retrieved_count=len(hits),
             )
 
         pieces = [f"- ({h.get('document_name')}) {_excerpt(h['text'], 220)}" for h in hits[:5]]
-        answer = (
-            "LLM key is not configured, so this is an extractive draft from retrieved evidence:\n"
-            + "\n".join(pieces)
-        )
+        answer = "Extractive draft from retrieved evidence:\n" + "\n".join(pieces)
         return InvestigateResponse(
             answer=answer,
             confidence=0.35,
@@ -321,10 +290,8 @@ def _subqueries(question: str) -> list[str]:
         p = p.strip()
         if len(p.split()) >= 4:
             out.append(p)
-    # also keep original-ish variants for who/what/when
     if "which" in q.lower() or "what" in q.lower():
         out.append(q)
-    # unique preserve order
     seen = set()
     uniq = []
     for p in out:
@@ -348,20 +315,3 @@ def _excerpt(text: str, n: int = 280) -> str:
     if len(text) <= n:
         return text
     return text[: n - 1] + "…"
-
-
-def _safe_json(text: str) -> dict:
-    text = (text or "").strip()
-    if not text:
-        return {}
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start >= 0 and end > start:
-            try:
-                return json.loads(text[start : end + 1])
-            except json.JSONDecodeError:
-                return {"answer": text, "confidence": 0.3, "abstained": False, "used_chunk_ids": []}
-        return {"answer": text, "confidence": 0.3, "abstained": False, "used_chunk_ids": []}

@@ -1,5 +1,10 @@
 # AI Investigation Engine
 
+## Live demo
+https://ai-investigation-engine-dy06.onrender.com
+
+> Free Render instance may sleep after idle time; first open can take ~30–60 seconds.
+
 Multi-document investigation system for the Talent Growth Program — Applied AI task.
 
 This is **not** a simple Chat-with-PDF demo. The engine retrieves evidence across many sources, runs multi-step investigation (including tool calls), cross-checks contradictions, cites sources, and abstains when evidence is missing.
@@ -133,7 +138,7 @@ reports/            evaluation + AI usage reports
 ## Deliverables checklist
 
 - [x] Source code (this repo)
-- [ ] Live demo URL (after you deploy)
+- [x] Live demo URL (https://ai-investigation-engine-dy06.onrender.com)
 - [x] README (this file)
 - [x] Evaluation report (`reports/EVALUATION_REPORT.md`)
 - [x] AI usage report (`reports/AI_USAGE_REPORT.md`)

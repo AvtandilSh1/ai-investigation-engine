@@ -19,4 +19,4 @@ ENV META_DB_PATH=/data/meta.sqlite3
 
 EXPOSE 7860
 
-CMD ["bash", "-lc", "python scripts/seed_demo.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-7860}"]
+CMD ["bash", "-lc", "python scripts/seed_if_empty.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

@@ -39,7 +39,7 @@ class LLMClient:
             kwargs["tool_choice"] = "auto"
 
         try:
-            resp = self._client.chat.completions.create(**kwargs)
+            resp = self._client.chat.completions.create(**kwargs, timeout=45.0)
         except Exception as e:
             raise RuntimeError(f"LLM request failed: {e}") from e
 

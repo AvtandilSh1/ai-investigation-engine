@@ -72,8 +72,9 @@ document.getElementById("askBtn").addEventListener("click", async () => {
     return;
   }
   btn.disabled = true;
-  msg.textContent = "investigating…";
+  msg.textContent = "investigating… (first request after sleep can take up to a minute)";
   try {
+    await refreshHealth();
     const top_k = Number(document.getElementById("topK").value || 8);
     const data = await api("/api/investigate", {
       method: "POST",
@@ -83,7 +84,13 @@ document.getElementById("askBtn").addEventListener("click", async () => {
     renderResult(data);
     msg.textContent = "";
   } catch (err) {
-    msg.textContent = String(err.message || err);
+    const raw = String(err.message || err);
+    if (raw === "Failed to fetch" || raw.includes("NetworkError") || raw.includes("fetch")) {
+      msg.textContent =
+        "Failed to fetch — free server may be waking up. Wait 30–60 seconds, refresh the page, then try again.";
+    } else {
+      msg.textContent = raw;
+    }
   } finally {
     btn.disabled = false;
   }
